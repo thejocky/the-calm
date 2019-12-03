@@ -1,64 +1,86 @@
 #!/bin/env python3
-walls = {0:" ", 3:"│", 7:"│", 10:"│", 5:"─", 11:"─", 16:"─", 14:"┘", 18:"┐", 12:"┌", 8:"└", 19:"┴", 21:"┤", 23:"┬", 15:"├", 26:"┼"}
+from enum import Enum
 
-def new_map(h, w):
-    map = [[(0, 1) for rj in range(w)] for j in range(h)]
-    return map
 
-def generate(map):
-    for j in range (len(map[0])):
-        map[0][j] = (1, 1)
-        map[len(map)-1][j] = (1, 1)
-        map[(len(map))//2][j] = (1, 1)
-    for j in range (len(map)):
-        map[j][0] = (1, 1)
-        map[j][len(map[0])-1] = (1, 1)
-        map[j][(len(map[0]))//2] = (1, 1)
-    return map
+class tile(Enum):
+    INVALID = 0
+    NUL = 1
+    WALL = 2
+    FLOOR = 3
 
-def print_dungeon(dungeon):
-    for j in dungeon:
-        for k in j:
-            if k[1]:
-                print (walls[k[0]], end="")
-            else:
-                print (" ", end="")
-        print()
+
+class dungeon:
+    walls = {
+        0: " ",
+        3: "│",
+        7: "│",
+        10: "│",
+        5: "─",
+        11: "─",
+        16: "─",
+        14: "┘",
+        18: "┐",
+        12: "┌",
+        8: "└",
+        19: "┴",
+        21: "┤",
+        23: "┬",
+        15: "├",
+        26: "┼",
+    }
+
+    def __init__(self, x: int, y: int):
+        self.layout = [[tile.NUL for rj in range(x)] for j in range(y)]
+
+    def _tile_is(tile, x: int, y: int):
+        return tile == layout[y][x]
+
+    def generate(self):
+        for j in range(len(self.layout[0])):
+            self.layout[0][j] = tile.WALL
+            self.layout[len(self.layout) - 1][j] = tile.WALL
+            self.layout[(len(self.layout)) // 2][j] = tile.WALL
+        for j in range(len(self.layout)):
+            self.layout[j][0] = tile.WALL
+            self.layout[j][len(self.layout[0]) - 1] = tile.WALL
+            self.layout[j][(len(self.layout[0])) // 2] = tile.WALL
+
+    # above = 3, right = 5, bottom = 7, left = 11
+    def find_wall_type(self, x: int, y: int):
+        value = 0
+        if self.layout[y][x] == tile.WALL:
+            if y:
+                if self.layout[y - 1][x] == tile.WALL:
+                    value += 3
+            if x:
+                if self.layout[y][x - 1] == tile.WALL:
+                    value += 11
+            if y != len(self.layout) - 1:
+                if self.layout[y + 1][x] == tile.WALL:
+                    value += 7
+            if x != len(self.layout[0]) - 1:
+                if self.layout[y][x + 1] == tile.WALL:
+                    value += 5
+        return walls[value]
+
+    def print(self):
+        out = ""
+        for j, v in enumerate(self.layout):
+            for i, t in enumerate(v):
+                if t == tile.WALL:
+                    out += self.find_wall_type(i, j)
+                else:
+                    out += " "
+            if j < len(self.layout) - 1:
+                out += "\n"
+        return out
+
+
+m = dungeon(10, 5)
+m.generate()
+
+for j in m.layout:
+    print(j)
     print()
 
-
-
-# above = 3, right = 5, bottom = 7, left = 11
-def find_wall_type(dungeon):
-    for j in range(len(dungeon)):
-        for k in range(len(dungeon[0])):
-            value = 0
-            if dungeon[j][k][0]:
-                if j:
-                    if dungeon[j-1][k][0]:
-                        value += 3
-                if k:
-                    if dungeon[j][k-1][0]:
-                        value += 11
-                if j != len(dungeon)-1:
-                    if dungeon[j+1][k][0]:
-                        value += 7
-                if k != len(dungeon[0])-1:
-                    if dungeon[j][k+1][0]:
-                        value += 5
-            dungeon[j][k] = (value, dungeon[j][k][1])
-    return dungeon
-
-
-
-
-m = new_map(10, 20)
-m = generate(m)
-for j in m:
-    print (j)
-    print ()
-m = find_wall_type(m)
-for j in m:
-    print (j)
-    print ()
-print_dungeon(m)
+print(m.print())
